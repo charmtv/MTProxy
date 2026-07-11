@@ -1947,7 +1947,7 @@ manage_telemt_users() {
 menu() {
     clear
     echo -e "${BLUE}========================================${PLAIN}"
-    echo -e "       ${GREEN}MTProxy 管理脚本 V2.5${PLAIN}"
+    echo -e "     ${GREEN}米粒 MTProxy 管理脚本 V2.5${PLAIN}"
     echo -e "${BLUE}========================================${PLAIN}"
     echo -e "系统: ${GREEN}${OS}${PLAIN}  |  服务: ${GREEN}${INIT_SYSTEM}${PLAIN}"
     echo -e "Go: $(get_service_status_str mtg)  Telemt: $(get_service_status_str telemt)"
