@@ -10,7 +10,10 @@ test.afterEach(() => {
 
 test("根路径返回安装器", async () => {
   globalThis.fetch = async (url) => {
-    assert.equal(String(url), "https://raw.githubusercontent.com/charmtv/MTProxy/main/install.sh");
+    assert.match(
+      String(url),
+      /^https:\/\/api\.github\.com\/repos\/charmtv\/MTProxy\/contents\/install\.sh\?ref=main&t=\d+$/,
+    );
     return new Response("#!/usr/bin/env bash\n", { status: 200 });
   };
 

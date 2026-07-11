@@ -1,4 +1,4 @@
-const REPOSITORY_RAW_URL = "https://raw.githubusercontent.com/charmtv/MTProxy/main";
+const REPOSITORY_API_URL = "https://api.github.com/repos/charmtv/MTProxy/contents";
 
 const routes = new Map([
   ["/", "install.sh"],
@@ -33,10 +33,14 @@ export default {
     }
 
     try {
-      const upstream = await fetch(REPOSITORY_RAW_URL + "/" + filename + url.search, {
+      const upstream = await fetch(`${REPOSITORY_API_URL}/${filename}?ref=main&t=${Date.now()}`, {
         method: request.method,
-        headers: { "user-agent": "mtproxy-launcher/2.5" },
-        cf: { cacheTtl: 300, cacheEverything: true },
+        headers: {
+          accept: "application/vnd.github.raw+json",
+          "user-agent": "mtproxy-launcher/2.5",
+          "x-github-api-version": "2022-11-28",
+        },
+        cf: { cacheTtl: 60, cacheEverything: true },
       });
 
       if (!upstream.ok) {
@@ -45,7 +49,7 @@ export default {
 
       const headers = new Headers(upstream.headers);
       headers.set("content-type", "text/plain; charset=utf-8");
-      headers.set("cache-control", "public, max-age=300");
+      headers.set("cache-control", "public, max-age=60");
       headers.set("content-disposition", "inline; filename=\"" + filename + "\"");
       headers.set("x-content-type-options", "nosniff");
 
