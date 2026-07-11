@@ -36,6 +36,7 @@ mtp
 
 ```bash
 mtp              # 打开管理菜单
+mtp update       # 更新管理脚本
 mtp force_reset  # 立即重置 Telemt 流量配额
 mtp check_reset  # 执行定时配额检查
 ```

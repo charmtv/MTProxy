@@ -33,7 +33,7 @@ export default {
     }
 
     try {
-      const upstream = await fetch(REPOSITORY_RAW_URL + "/" + filename, {
+      const upstream = await fetch(REPOSITORY_RAW_URL + "/" + filename + url.search, {
         method: request.method,
         headers: { "user-agent": "mtproxy-launcher/2.5" },
         cf: { cacheTtl: 300, cacheEverything: true },

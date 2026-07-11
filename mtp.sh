@@ -1943,6 +1943,36 @@ manage_telemt_users() {
     manage_telemt_users
 }
 
+# --- 更新脚本 ---
+update_script() {
+    local update_url="https://mtproxy.813099.xyz/mtp.sh?t=$(date +%s)"
+    local temp_file
+    temp_file=$(mktemp)
+
+    echo -e "${BLUE}正在检查并下载最新版脚本...${PLAIN}"
+    if command -v curl >/dev/null 2>&1; then
+        curl -fL --connect-timeout 10 --retry 2 -sS "$update_url" -o "$temp_file"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q --timeout=15 --tries=3 "$update_url" -O "$temp_file"
+    else
+        echo -e "${RED}更新失败：系统未安装 curl 或 wget。${PLAIN}"
+        rm -f "$temp_file"
+        return 1
+    fi
+
+    if [ ! -s "$temp_file" ] || ! bash -n "$temp_file"; then
+        echo -e "${RED}更新失败：下载的脚本无效。${PLAIN}"
+        rm -f "$temp_file"
+        return 1
+    fi
+
+    install -m 0755 "$temp_file" /usr/local/bin/mtp
+    rm -f "$temp_file"
+    echo -e "${GREEN}更新完成，正在重新打开管理菜单...${PLAIN}"
+    sleep 1
+    exec /usr/local/bin/mtp
+}
+
 # --- 菜单 ---
 menu() {
     clear
@@ -1964,9 +1994,10 @@ menu() {
     echo -e "${GREEN}[10]${PLAIN} 停止服务"
     echo -e "${GREEN}[11]${PLAIN} 重启服务"
     echo -e "${RED}[12]${PLAIN} 卸载全部并清理"
+    echo -e "${GREEN}[13]${PLAIN} 更新管理脚本"
     echo -e "${GREEN}[0]${PLAIN}  退出脚本"
     echo -e "${BLUE}========================================${PLAIN}"
-    read -p "请输入选项 [0-12]: " choice
+    read -p "请输入选项 [0-13]: " choice
 
     case $choice in
         1) install_base_deps; install_mtg; back_to_menu ;;
@@ -1981,12 +2012,18 @@ menu() {
         10) control_service stop; back_to_menu ;;
         11) control_service restart; back_to_menu ;;
         12) delete_all; exit 0 ;;
+        13) update_script ;;
         0) echo -e "${GREEN}再见!${PLAIN}"; exit 0 ;;
         *) echo -e "${RED}无效选项${PLAIN}"; sleep 1; menu ;;
     esac
 }
 
 check_sys
+
+if [ "$1" == "update" ]; then
+    update_script
+    exit $?
+fi
 
 # 命令行参数：支持 Cron 静默调用
 if [ "$1" == "check_reset" ]; then
