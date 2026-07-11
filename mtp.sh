@@ -5,6 +5,7 @@ WORKDIR="/opt/mtproxy"
 CONFIG_DIR="$WORKDIR/config"
 LOG_DIR="$WORKDIR/logs"
 BIN_DIR="$WORKDIR/bin"
+RELEASE_REPO="0xdabiaoge/MTProxy"
 
 # 获取脚本绝对路径
 SCRIPT_PATH=$(readlink -f "$0" 2>/dev/null)
@@ -286,7 +287,7 @@ install_mtg() {
         cp "${FOUND_PATH}" "$BIN_DIR/mtg-go"
     else
         echo -e "${BLUE}未找到本地文件，尝试从 GitHub 下载 (${TARGET_NAME})...${PLAIN}"
-        DOWNLOAD_URL="https://github.com/0xdabiaoge/MTProxy/releases/download/Go-Rust/${TARGET_NAME}"
+        DOWNLOAD_URL="https://github.com/${RELEASE_REPO}/releases/download/Go-Rust/${TARGET_NAME}"
         wget -O "$BIN_DIR/mtg-go" "$DOWNLOAD_URL"
         if [ $? -ne 0 ]; then
             echo -e "${RED}下载失败！${PLAIN}"
@@ -440,7 +441,7 @@ install_telemt() {
         chmod +x "$BIN_DIR/telemt"
     else
         # --- 在线下载逻辑 ---
-        DOWNLOAD_URL="https://github.com/0xdabiaoge/MTProxy/releases/download/Go-Rust/${TARGET_BIN}"
+        DOWNLOAD_URL="https://github.com/${RELEASE_REPO}/releases/download/Go-Rust/${TARGET_BIN}"
         
         echo -e "${BLUE}未找到本地文件，尝试从个人 GitHub 仓库下载 (${TARGET_BIN})...${PLAIN}"
         wget -qO "$BIN_DIR/telemt" "$DOWNLOAD_URL"
@@ -1945,42 +1946,28 @@ manage_telemt_users() {
 # --- 菜单 ---
 menu() {
     clear
-    echo -e ""
-    echo -e "${BLUE} __  __ _____ ____                      ${PLAIN}"
-    echo -e "${BLUE}|  \/  |_   _|  _ \ _ __ _____  ___   _ ${PLAIN}"
-    echo -e "${BLUE}| |\/| | | | | |_) | '__/ _ \ \/ / | | |${PLAIN}"
-    echo -e "${BLUE}| |  | | | | |  __/| | | (_) >  <| |_| |${PLAIN}"
-    echo -e "${BLUE}|_|  |_| |_| |_|   |_|  \___/_/\_\\\\__, |${PLAIN}"
-    echo -e "${BLUE}                                  |___/ ${PLAIN}${GREEN}Lite Manager${PLAIN}"
-    echo -e ""
-    echo -e "  ${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
-    echo -e "          ${GREEN}MTProxy 管理脚本 v2.0${PLAIN}"
-    echo -e "  ${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
-    echo -e ""
-    echo -e "  系统: ${GREEN}${OS}${PLAIN}  |  模式: ${GREEN}${INIT_SYSTEM}${PLAIN}"
-    echo -e "  Go 版: $(get_service_status_str mtg)  Telemt 版: $(get_service_status_str telemt)"
-    echo -e ""
-    echo -e "  ${YELLOW}【安 装】${PLAIN}"
-    echo -e "    ${GREEN}[1]${PLAIN} 安装 Go 版          ${GREEN}[2]${PLAIN} 安装 Telemt (高性能进阶版)"
-    echo -e ""
-    echo -e "  ${YELLOW}【管 理】${PLAIN}"
-    echo -e "    ${GREEN}[3]${PLAIN} 查看连接信息        ${GREEN}[4]${PLAIN} 修改配置"
-    echo -e "    ${GREEN}[5]${PLAIN} 删除配置            ${GREEN}[6]${PLAIN} Telemt 多用户管理"
-    echo -e ""
-    echo -e "  ${YELLOW}【状态与日志】${PLAIN}"
-    echo -e "    ${GREEN}[7]${PLAIN} 查看运行状态        ${GREEN}[8]${PLAIN} 查看日志"
-    echo -e ""
-    echo -e "  ${YELLOW}【服务控制】${PLAIN}"
-    echo -e "    ${GREEN}[9]${PLAIN} 启动服务           ${GREEN}[10]${PLAIN} 停止服务"
-    echo -e "    ${GREEN}[11]${PLAIN} 重启服务"
-    echo -e ""
-    echo -e "  ${RED}【危险操作】${PLAIN}"
-    echo -e "    ${RED}[12]${PLAIN} 卸载全部并清理"
-    echo -e ""
-    echo -e "    ${GREEN}[0]${PLAIN} 退出脚本"
-    echo -e ""
-    read -p "  请输入选项 [0-12]: " choice
-    
+    echo -e "${BLUE}========================================${PLAIN}"
+    echo -e "       ${GREEN}MTProxy 管理脚本 V2.5${PLAIN}"
+    echo -e "${BLUE}========================================${PLAIN}"
+    echo -e "系统: ${GREEN}${OS}${PLAIN}  |  服务: ${GREEN}${INIT_SYSTEM}${PLAIN}"
+    echo -e "Go: $(get_service_status_str mtg)  Telemt: $(get_service_status_str telemt)"
+    echo -e "${BLUE}----------------------------------------${PLAIN}"
+    echo -e "${GREEN}[1]${PLAIN}  安装 Go 版"
+    echo -e "${GREEN}[2]${PLAIN}  安装 Telemt 版"
+    echo -e "${GREEN}[3]${PLAIN}  查看连接信息"
+    echo -e "${GREEN}[4]${PLAIN}  修改配置"
+    echo -e "${GREEN}[5]${PLAIN}  删除配置"
+    echo -e "${GREEN}[6]${PLAIN}  Telemt 多用户管理"
+    echo -e "${GREEN}[7]${PLAIN}  查看运行状态"
+    echo -e "${GREEN}[8]${PLAIN}  查看日志"
+    echo -e "${GREEN}[9]${PLAIN}  启动服务"
+    echo -e "${GREEN}[10]${PLAIN} 停止服务"
+    echo -e "${GREEN}[11]${PLAIN} 重启服务"
+    echo -e "${RED}[12]${PLAIN} 卸载全部并清理"
+    echo -e "${GREEN}[0]${PLAIN}  退出脚本"
+    echo -e "${BLUE}========================================${PLAIN}"
+    read -p "请输入选项 [0-12]: " choice
+
     case $choice in
         1) install_base_deps; install_mtg; back_to_menu ;;
         2) install_base_deps; install_telemt; back_to_menu ;;
