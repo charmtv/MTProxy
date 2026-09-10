@@ -1,0 +1,28 @@
+name: Verify release assets
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - mtp.sh
+      - package.json
+      - tests/check-release-assets.mjs
+      - .github/workflows/release-assets.yml
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run test:release

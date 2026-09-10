@@ -287,7 +287,7 @@ install_mtg() {
         cp "${FOUND_PATH}" "$BIN_DIR/mtg-go"
     else
         echo -e "${BLUE}未找到本地文件，尝试从 GitHub 下载 (${TARGET_NAME})...${PLAIN}"
-        DOWNLOAD_URL="https://github.com/${RELEASE_REPO}/releases/download/Go-Rust/${TARGET_NAME}"
+        DOWNLOAD_URL="https://github.com/${RELEASE_REPO}/releases/latest/download/${TARGET_NAME}"
         wget -O "$BIN_DIR/mtg-go" "$DOWNLOAD_URL"
         if [ $? -ne 0 ]; then
             echo -e "${RED}下载失败！${PLAIN}"
@@ -441,7 +441,7 @@ install_telemt() {
         chmod +x "$BIN_DIR/telemt"
     else
         # --- 在线下载逻辑 ---
-        DOWNLOAD_URL="https://github.com/${RELEASE_REPO}/releases/download/Go-Rust/${TARGET_BIN}"
+        DOWNLOAD_URL="https://github.com/${RELEASE_REPO}/releases/latest/download/${TARGET_BIN}"
         
         echo -e "${BLUE}未找到本地文件，尝试从个人 GitHub 仓库下载 (${TARGET_BIN})...${PLAIN}"
         wget -qO "$BIN_DIR/telemt" "$DOWNLOAD_URL"

@@ -30,7 +30,7 @@ chmod +x /usr/local/bin/mtp
 mtp
 ```
 
-域名入口由 Cloudflare Worker 提供，源脚本同步自本仓库。Go 与 Telemt 的预编译文件继续使用上游项目 `Go-Rust` Release。
+域名入口由 Cloudflare Worker 提供，源脚本同步自本仓库。Go 与 Telemt 的预编译文件从 `0xdabiaoge/MTProxy` 的最新 Release 下载。
 
 ## 常用命令
 
