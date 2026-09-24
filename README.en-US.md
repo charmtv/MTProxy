@@ -1,54 +1,119 @@
-# MTProxy One-Click Management Script (Go / Rust Dual-Kernel Edition)
+# MTProxy Management Script
 
-Supports both **Debian/Ubuntu** and **Alpine Linux**. **Compatible with full KVM, LXC, and the more streamlined Docker virtualization LXC**. It consists of two different versions: **Go** and **Rust**. This script uses pre-compiled binaries for installation. The GO version is compiled from optimized source code of [mtg](https://github.com/9seconds/mtg). The telemt (Rust) version is compiled from optimized source code of [telemt](https://github.com/telemt/telemt).
+One-command deployment and management for MTProxy with two kernels: Go ([mtg](https://github.com/9seconds/mtg)) and Rust ([Telemt](https://github.com/telemt/telemt)). Supports Debian, Ubuntu, CentOS / RHEL / Rocky / Alma and Alpine Linux on amd64 and arm64.
 
-## ✨ Core Features
+[中文](README.md)
 
-*   **🚀 Kernel Architecture**:
-    *   **Go Version (mtg)**: Source-optimized version. Extremely low memory footprint, powerful performance, anti-replay attack, and strong FakeTLS camouflage mechanism. Ideal for individuals or small groups. High concurrency, low latency, and high speed.
-    *   **telemt (Rust) Version**: Adds multi-user management on top of the original version, allowing you to determine traffic quotas, expiration dates, and bandwidth limits for user proxy links. It integrates the advantages of the GO version.
-*   **🎯 Listening Modes**:
-    *   **IPV4 Mode**: Supports only IPV4 address inbound/outbound connections and uses an IPV4 address as the MTPROTO link.
-    *   **IPV6 Mode**: Supports only IPV6 address inbound/outbound connections and uses an IPV6 address as the MTPROTO link.
-    *   **Dual-Stack Mode**: Outputs both IPV4 and IPV6 links simultaneously with separate ports to accommodate different network environments.
+## Install
+
+```bash
+bash <(curl -fsSL https://mtproxy.813099.xyz)
+```
+
+Then run `mtp` to open the menu. The interface is in Chinese; every feature is also available as a command (see below).
+
+Install the development channel (`main` branch):
+
+```bash
+MTP_CHANNEL=dev bash <(curl -fsSL https://mtproxy.813099.xyz)
+```
+
+## Features
+
+**Kernels**
+
+- **Go (mtg)**: low memory footprint, suited to personal use or small groups.
+- **Telemt (Rust)**: multiple users. Each user can have a dedicated port, a traffic quota, an expiry date and upload/download speed limits.
+- Both kernels can run at the same time. IPv4, IPv6 and dual-stack are supported.
+- Binaries are downloaded from GitHub Releases and verified with SHA-256.
+- Updating a kernel replaces only the binary, so configuration and links stay the same. If the new binary fails to start, the previous one is restored automatically.
+
+**User management (Telemt)**
+
+- A table view shows traffic progress and expiry dates. It highlights users at 80 % of their quota or within 7 days of expiry.
+- Quotas accept units: `50G`, `500M`, `1.5T`.
+- Expiry dates accept `2026-12-31`, `2026-12-31 18:00` or `+30d`. `+30d` extends from the current expiry date.
+- Traffic can be reset monthly or once on a chosen date. Expired users are skipped. A reset day beyond the length of the month runs on the last day of that month.
+- Each user has their own link, QR code and secret rotation.
+
+**Reliability and security**
+
+- User data lives in `users.db`. The full Telemt configuration is regenerated on every change, and a failed restart rolls back to the previous state.
+- Telemt is stopped before its usage file is modified, so the kernel's shutdown flush cannot overwrite a reset.
+- The mtg secret is stored in a mode-600 config file instead of the process arguments.
+- systemd units are sandboxed by default, and mtg runs as an unprivileged user. The script falls back to a compatible unit when the host does not support sandboxing.
+- Secrets are hidden when logs are shown. OpenRC logs are rotated weekly.
+
+**Operations**
+
+- `doctor` checks:
+  - services and listening ports
+  - public reachability
+  - firewall rules
+  - clock skew
+  - TLS 1.3 support of the masking domain
+  - BBR
+  - available updates
+
+  It can open firewall ports and enable BBR for you.
+- `backup` / `restore` package configuration, users and traffic usage into a single file for migration.
+- A custom link host (domain or IP) can be set for NAT machines.
+- Telemt supports a promoted channel (ad_tag).
+
+## Command line
+
+```bash
+mtp status | info | start | stop | restart [go|telemt]
+mtp logs [go|telemt] [-f]
+mtp user list [--json]
+mtp user add alice --quota 50G --expire +30d --port 8443 --up 2 --down 10
+mtp user edit alice --expire +30d --no-limit
+mtp user link alice --qr
+mtp user reset alice
+mtp user del alice -y
+mtp reset-now
+mtp doctor [--fix]
+mtp upgrade-core [go|telemt]
+mtp update [--dev|--stable]
+mtp backup [file] | mtp restore file
+mtp uninstall
+```
+
+Run `mtp help` for details.
+
+## File layout
+
+| Path | Contents |
+|---|---|
+| `/etc/mtproxy/` | Configuration and user data |
+| `/etc/mtproxy/telemt.extra.toml` | Optional custom Telemt tables, appended to the generated config |
+| `/etc/telemt_quota.json` | Telemt traffic usage (path fixed by the kernel) |
+| `/var/lib/mtproxy/` | State and backups |
+| `/var/log/mtproxy/` | Logs |
+| `/opt/mtproxy/bin/` | Kernel binaries |
+
+## Upgrading from 2.x
+
+Run `mtp update`. On first start the new version migrates the old configuration automatically:
+
+- Users, quotas, expiry dates, speed limits, dedicated ports, traffic usage and the reset schedule are all kept.
+- Existing links keep working.
+- The old files are archived in `/var/lib/mtproxy/backups/legacy-*.tar.gz`.
+- Services restart once during migration.
+- If migration fails, the services keep running on the old configuration. Run `mtp migrate` to retry.
+
+## Development
+
+The script is split into modules under `src/`. The single-file `mtp.sh` is generated:
+
+```bash
+bash scripts/build.sh        # writes mtp.sh and mtp.sh.sha256
+npm test                     # worker tests + shell unit tests
+bash tests/shell/cores.sh    # starts the real kernels with generated configs (needs network)
+```
+
+Pushing a `v3.x.y` tag moves the `stable` branch to that tag. The install endpoint serves `stable`, and falls back to `main` if `stable` does not exist.
+
 ---
 
-## 📥 Installation and Usage
-
-**Quick Command: mtp**
-
-```
-(curl -LfsS https://raw.githubusercontent.com/0xdabiaoge/MTProxy/main/mtp.sh -o /usr/local/bin/mtp || wget -q https://raw.githubusercontent.com/0xdabiaoge/MTProxy/main/mtp.sh -O /usr/local/bin/mtp) && chmod +x /usr/local/bin/mtp && mtp
-```
-
-## 💧 Traffic Quota Reset Testing
-
-```mtp force_reset```
-Test traffic reset immediately.
-
-```mtp```
-Open the management panel.
-
-```mtp check_reset```
-Cron silent check (automatically called by Cron daily).
-
-
-## Conclusion
-**Due to the nature of MTPROTO proxies, it is recommended for personal use only! For testing purposes only.**
-
-## Changelog
-## 2026.03.01
-- **GO Version Refactor & Optimization**: The GO version underwent a new round of refactoring and optimization. It fixed the issue of legacy zombie connections and resolved memory overflow issues occurring during multi-user connections.
-
-## 2026.03.03
-- **Added telemt (Rust Version)**: Based on the source code provided by the [telemt](https://github.com/telemt/telemt) project. Several fixes were implemented; the original version did not support a single-user single-port mode, which has now been added. This provides convenience for temporary sharing with friends without affecting other users—simply delete the corresponding username to deactivate it.
-
-## 2026.03.10
-- **telemt Version Deep Optimization**: Added control for user traffic quotas and expiration dates on top of multi-user management. The connection for the corresponding username will be automatically blocked once either limit is reached.
-- **Traffic Reset**: Added a username traffic quota reset date for the telemt version. When enabled, the default reset time is midnight on the 1st of every month. This can be set during the initial creation of a username, or for subsequent users via option 4 in the multi-user management submenu.
-
-## 2026.03.19
-- **telemt Version Bandwidth Limiting**: Added bandwidth limits for specified usernames to prevent uneven bandwidth distribution when multiple usernames exist. This prevents a single username from saturating the bandwidth and affecting other users.
-
-## 2026.04.07
-- **telemt Version ARM Architecture Binary**: Finally obtained a powerful ARM architecture machine to compile ARM binaries.
+For personal learning and testing only.

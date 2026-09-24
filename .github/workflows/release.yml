@@ -1,0 +1,31 @@
+name: Release
+
+# 推送 v* 标签后，把 stable 分支指向该标签。
+# 安装入口默认从 stable 分支读取脚本，main 上的改动不会立即推送给所有用户。
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  stable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 标签与脚本版本一致
+        run: |
+          version="$(sed -n 's/^MTP_VERSION="\([0-9.]*\)"$/\1/p' mtp.sh)"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "标签 $GITHUB_REF_NAME 与 mtp.sh 中的版本 v$version 不一致" >&2
+            exit 1
+          fi
+      - name: mtp.sh 与 src/ 一致
+        run: bash scripts/build.sh --check
+      - name: 更新 stable 分支
+        run: git push --force origin "HEAD:refs/heads/stable"

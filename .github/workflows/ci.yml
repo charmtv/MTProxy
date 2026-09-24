@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: 构建检查与 ShellCheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: mtp.sh 与 src/ 一致
+        run: bash scripts/build.sh --check
+      - name: ShellCheck
+        run: shellcheck -S warning mtp.sh install.sh scripts/build.sh tests/shell/*.sh
+
+  test:
+    name: 单元测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+
+  alpine:
+    name: 单元测试（Alpine / BusyBox）
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: >
+          docker run --rm -v "$PWD:/w" -w /w alpine:3.20
+          sh -c 'apk add --no-cache bash python3 >/dev/null && bash tests/shell/unit.sh'
+
+  cores:
+    name: 真实内核启动测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash tests/shell/cores.sh
