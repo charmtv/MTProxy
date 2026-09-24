@@ -1,10 +1,12 @@
 {
   "name": "mtproxy-launcher",
-  "version": "2.5.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
+    "build": "bash scripts/build.sh",
+    "test": "node --test tests/*.test.mjs && bash tests/shell/unit.sh",
+    "test:cores": "bash tests/shell/cores.sh",
     "test:release": "node tests/check-release-assets.mjs",
     "deploy": "wrangler deploy"
   },
