@@ -9,7 +9,17 @@ lock_acquire() {
     have flock || return 0
     mkdir -p "$STATE_DIR"
     exec 9>"$STATE_DIR/.lock" || return 0
-    flock -w 120 9 || { err "另一个 mtp 操作正在进行，请稍后再试"; return 1; }
+    # BusyBox 的 flock 不支持 -w，用 -n 轮询等待最多 120 秒
+    local waited=0
+    until flock -n 9 2>/dev/null; do
+        if (( waited >= 120 )); then
+            exec 9>&-
+            err "另一个 mtp 操作正在进行，请稍后再试"
+            return 1
+        fi
+        sleep 1
+        waited=$(( waited + 1 ))
+    done
     MTP_LOCKED=1
 }
 

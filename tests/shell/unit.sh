@@ -289,6 +289,21 @@ echo 443 > "$ROOT/run/busy"
 eq "$(port_suggest mtg)" 2053
 rm -f "$ROOT/run/busy"
 
+# ---------------- 并发锁 ----------------
+t "并发锁（兼容 BusyBox flock）"
+reset_sandbox
+if command -v flock >/dev/null 2>&1; then
+    ( exec 8>"$STATE_DIR/.lock"; flock -n 8; sleep 2 ) &
+    holder=$!
+    sleep 0.5
+    lock_start=$(command date +%s)
+    check 'with_lock true'
+    check '(( $(command date +%s) - lock_start >= 1 ))'
+    check '[ -z "${MTP_LOCKED:-}" ]'
+    wait "$holder"
+    check 'with_lock true'
+fi
+
 # ---------------- 自动清零 ----------------
 t "自动清零"
 reset_sandbox
