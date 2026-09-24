@@ -136,7 +136,7 @@ doctor_run() {
     else
         detail "当前内核不支持 BBR（${cc:-未知}）"
     fi
-    remote=$(remote_version)
+    remote=$(remote_version refresh)
     if [ -n "$remote" ] && ver_gt "$remote" "$MTP_VERSION"; then
         doc_warn "脚本有新版本 v$remote（当前 v$MTP_VERSION）"
     else
